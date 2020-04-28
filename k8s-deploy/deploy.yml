@@ -1,0 +1,40 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  namespace: k8s-ecr-cred-autorenew
+  name: cron-k8s-ecr-cred-autorenew
+  labels:
+    app: k8s-ecr-cred-autorenew
+spec:
+  schedule: "0 */6 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: svc-k8s-ecr-cred-autorenew
+          containers:
+            - name: k8s-ecr-cred-autorenew
+              image: carterfields/k8s-ecr-cred-autorenew:latest
+              env:
+                - name: DOCKER_SECRET_NAME
+                  value: ecr-docker-login-demo
+                - name: TARGET_NAMESPACE
+                  value: k8s-ecr-cred-autorenew
+                - name: AWS_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      name: k8s-ecr-cred-autorenew
+                      key: REGION
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: k8s-ecr-cred-autorenew
+                      key: ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: k8s-ecr-cred-autorenew
+                      key: SECRET
